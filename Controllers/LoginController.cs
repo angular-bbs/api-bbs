@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AngularBBS.Controllers
 {
     [Route("api/login-from-github")]
-    public class MembersController : Controller
+    public class LoginController : Controller
     {
         // GET api/values
         [HttpGet]
@@ -27,9 +27,9 @@ namespace AngularBBS.Controllers
 
         // POST api/values
         [HttpPost]
-        public string Post([FromBody]string value)
+        public object Post([FromBody]string value)
         {
-            return "superman";
+            return new {name = "superman"};
         }
 
         // PUT api/values/5
