@@ -17,6 +17,7 @@ using AngularBBS.Models;
 using AngularBBS.Services;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 
 namespace AngularBBS
@@ -38,6 +39,9 @@ namespace AngularBBS
 
             builder.AddEnvironmentVariables();
             Configuration = builder.Build();
+
+            GitHubSecret.Secret = Configuration["GitHub:ClientSecret"];
+            GitHubSecret.ClientId = Configuration["GitHub:ClientId"];
         }
 
         public IConfigurationRoot Configuration { get; }
@@ -59,6 +63,7 @@ namespace AngularBBS
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();
+            services.AddTransient<HttpClient, HttpClient>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -83,8 +88,9 @@ namespace AngularBBS
             app.UseIdentity();
 
             // Add external authentication middleware below. To configure them please see https://go.microsoft.com/fwlink/?LinkID=532715
+           
             app.UseOAuthAuthentication(GitHubOptions);
-
+            
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
@@ -116,6 +122,8 @@ namespace AngularBBS
                };
         private static async Task CreateGitHubAuthTicket(OAuthCreatingTicketContext context)
         {
+            AccessToken.Token = context.AccessToken;
+            AccessToken.Expiry = context.ExpiresIn;
             // Get the GitHub user
             var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
@@ -125,7 +133,7 @@ namespace AngularBBS
             response.EnsureSuccessStatusCode();
 
             var user = JObject.Parse(await response.Content.ReadAsStringAsync());
-
+           
             AddClaims(context, user);
         }
 

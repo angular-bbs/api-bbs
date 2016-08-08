@@ -1,5 +1,23 @@
+@using Microsoft.AspNetCore.Builder
 @{
     ViewData["Title"] = "Home Page";
+}
+
+@if (User.Identity.IsAuthenticated)
+{
+    <div class="row">
+        <div class="col-md-12">
+            <ul>
+                @foreach (var claim in User.Claims)
+                {
+                    <li>@claim.Type = @claim.Value</li>
+                
+                }
+            </ul>
+
+        </div>
+    </div>
+
 }
 
 <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="6000">
