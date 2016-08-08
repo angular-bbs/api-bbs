@@ -29,48 +29,27 @@ namespace AngularBBS.Controllers
 
         // GET api/values
         [HttpGet]
-        public async Task GetAsync()
+        public async Task<string> GetAsync()
         {
-            var url = "https://api.github.com/authorizations/clients/" + GitHubSecret.ClientId;
-            var tokenRequestParameters = new Dictionary<string, string>()
-            {
-                { "client_secret", GitHubSecret.Secret}
-            };
-
-            var requestContent = new FormUrlEncodedContent(tokenRequestParameters);
-            var requestMessage = new HttpRequestMessage(HttpMethod.Put, url);
-            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken.Token);
-            requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            requestMessage.Headers.Add("User-Agent", "Angular-bbs");
-            requestMessage.Content = requestContent;
-
-
-            var response = await _httpClient.SendAsync(requestMessage, HttpContext.RequestAborted);
-            response.EnsureSuccessStatusCode();
-            if (response.IsSuccessStatusCode)
-            {
-                var payload = JObject.Parse(await response.Content.ReadAsStringAsync());
-                return;
-            }
-            else
-            {
-                var error = "OAuth token endpoint failure: " + await Display(response);
-                return;
-            }
-            //            await HttpContext.Authentication.ChallengeAsync("GitHub");
-//            var url = "https://api.github.com/user";// + GitHubSecret.ClientId;
+//            var url = "https://api.github.com/authorizations/clients/" + GitHubSecret.ClientId;
+//            var tokenRequestParameters = new Dictionary<string, string>()
+//            {
+//                { "client_secret", GitHubSecret.Secret}
+//            };
 //
-//            var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
+//            var requestContent = new FormUrlEncodedContent(tokenRequestParameters);
+//            var requestMessage = new HttpRequestMessage(HttpMethod.Put, url);
 //            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken.Token);
 //            requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 //            requestMessage.Headers.Add("User-Agent", "Angular-bbs");
+//            requestMessage.Content = requestContent;
 //
 //
 //            var response = await _httpClient.SendAsync(requestMessage, HttpContext.RequestAborted);
 //            response.EnsureSuccessStatusCode();
 //            if (response.IsSuccessStatusCode)
 //            {
-//                var user = JObject.Parse(await response.Content.ReadAsStringAsync());
+//                var payload = JObject.Parse(await response.Content.ReadAsStringAsync());
 //                return;
 //            }
 //            else
@@ -78,7 +57,20 @@ namespace AngularBBS.Controllers
 //                var error = "OAuth token endpoint failure: " + await Display(response);
 //                return;
 //            }
-//            return;
+            //            await HttpContext.Authentication.ChallengeAsync("GitHub");
+            var url = "https://api.github.com/user";// + GitHubSecret.ClientId;
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken.Token);
+            requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            requestMessage.Headers.Add("User-Agent", "Angular-bbs");
+
+
+            var response = await _httpClient.SendAsync(requestMessage, HttpContext.RequestAborted);
+            response.EnsureSuccessStatusCode();
+            var user = JObject.Parse(await response.Content.ReadAsStringAsync()).ToJson();
+            return user;
+
         }
 
         // GET api/values/5
