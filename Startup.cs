@@ -113,7 +113,7 @@ namespace AngularBBS
                    UserInformationEndpoint = "https://api.github.com/user",
                    ClaimsIssuer = "OAuth2-Github",
                    SaveTokens = true,
-                   
+                   Scope = { "public_repo" },
                    // Retrieving user information is unique to each provider.
                    Events = new OAuthEvents
                    {
