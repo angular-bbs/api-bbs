@@ -52,7 +52,8 @@ namespace AngularBBS
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
-
+            
+            services.AddAuthorization();
             services.AddMvc();
 
             // Add application services.
@@ -83,7 +84,6 @@ namespace AngularBBS
 
             // Add external authentication middleware below. To configure them please see https://go.microsoft.com/fwlink/?LinkID=532715
             app.UseOAuthAuthentication(GitHubOptions);
-            
 
             app.UseMvc(routes =>
             {
@@ -91,6 +91,7 @@ namespace AngularBBS
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+            
         }
         private OAuthOptions GitHubOptions =>
 
