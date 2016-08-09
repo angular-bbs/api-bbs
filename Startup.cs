@@ -1,23 +1,20 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AngularBBS.Data;
+using AngularBBS.Models;
+using AngularBBS.Services;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using AngularBBS.Data;
-using AngularBBS.Models;
-using AngularBBS.Services;
-using Microsoft.AspNetCore.Authentication.OAuth;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 
 namespace AngularBBS
@@ -28,8 +25,8 @@ namespace AngularBBS
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
+                .AddJsonFile("appsettings.json", true, true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true);
 
             if (env.IsDevelopment())
             {
@@ -39,12 +36,32 @@ namespace AngularBBS
 
             builder.AddEnvironmentVariables();
             Configuration = builder.Build();
-
-            GitHubSecret.Secret = Configuration["GitHub:ClientSecret"];
-            GitHubSecret.ClientId = Configuration["GitHub:ClientId"];
+            GithubConfig.ClientId = Configuration["GitHub:ClientId"];
+            GithubConfig.Secret = Configuration["GitHub:ClientSecret"];
         }
 
         public IConfigurationRoot Configuration { get; }
+
+        private OAuthOptions GitHubOptions =>
+            new OAuthOptions
+            {
+                AuthenticationScheme = "GitHub",
+                DisplayName = "GitHub",
+                ClientId = GithubConfig.ClientId,
+                ClientSecret = GithubConfig.Secret,
+                CallbackPath = new PathString("/login-github"),
+                AuthorizationEndpoint = GithubConfig.AuthorizeEndpoint,
+                TokenEndpoint = GithubConfig.TokenEndpoint,
+                UserInformationEndpoint = GithubConfig.UserInfoEndPoint,
+                ClaimsIssuer = GithubConfig.ClaimIssure,
+                SaveTokens = true,
+                Scope = {GithubConfig.Scope},
+                // Retrieving user information is unique to each provider.
+                Events = new OAuthEvents
+                {
+                    OnCreatingTicket = async context => { await CreateGitHubAuthTicket(context); }
+                }
+            };
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -56,7 +73,7 @@ namespace AngularBBS
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
-            
+
             services.AddAuthorization();
             services.AddMvc();
 
@@ -82,48 +99,32 @@ namespace AngularBBS
             {
                 app.UseExceptionHandler("/Home/Error");
             }
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
             app.UseStaticFiles();
 
-            app.UseIdentity();
+             app.UseIdentity();
 
             // Add external authentication middleware below. To configure them please see https://go.microsoft.com/fwlink/?LinkID=532715
-           
+            app.UseCookieAuthentication(new CookieAuthenticationOptions
+            {
+                AuthenticationScheme = "cookies",
+                AutomaticChallenge = true
+            });
+
+          
             app.UseOAuthAuthentication(GitHubOptions);
             
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    "default",
+                    "{controller=Home}/{action=Index}/{id?}");
             });
-            
         }
-        private OAuthOptions GitHubOptions =>
 
-               new OAuthOptions
-               {
-                   AuthenticationScheme = "GitHub",
-                   DisplayName = "GitHub",
-                   ClientId = Configuration["GitHub:ClientId"],
-                   ClientSecret = Configuration["GitHub:ClientSecret"],
-                   CallbackPath = new PathString("/login-github"),
-                   AuthorizationEndpoint = "https://github.com/login/oauth/authorize",
-                   TokenEndpoint = "https://github.com/login/oauth/access_token",
-                   UserInformationEndpoint = "https://api.github.com/user",
-                   ClaimsIssuer = "OAuth2-Github",
-                   SaveTokens = true,
-                   Scope = { "public_repo" },
-                   // Retrieving user information is unique to each provider.
-                   Events = new OAuthEvents
-                   {
-                       OnCreatingTicket = async context => { await CreateGitHubAuthTicket(context); }
-                   }
-               };
         private static async Task CreateGitHubAuthTicket(OAuthCreatingTicketContext context)
         {
-            AccessToken.Token = context.AccessToken;
-            AccessToken.Expiry = context.ExpiresIn;
             // Get the GitHub user
             var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
@@ -133,7 +134,7 @@ namespace AngularBBS
             response.EnsureSuccessStatusCode();
 
             var user = JObject.Parse(await response.Content.ReadAsStringAsync());
-           
+
             AddClaims(context, user);
         }
 
@@ -171,8 +172,5 @@ namespace AngularBBS
                     ClaimValueTypes.String, context.Options.ClaimsIssuer));
             }
         }
-        
     }
-
-   
 }

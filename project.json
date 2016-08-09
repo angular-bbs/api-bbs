@@ -46,7 +46,10 @@
     "Microsoft.AspNet.WebApi.Client": "5.2.3",
     "Microsoft.AspNetCore.Authentication.Cookies": "1.0.0",
     "Microsoft.AspNetCore.Authentication.OAuth": "1.0.0",
-    "Microsoft.AspNetCore.Authorization": "1.0.0"
+    "Microsoft.AspNetCore.Authentication.OpenIdConnect":  "1.0.0", 
+    "Microsoft.AspNetCore.Authorization": "1.0.0",
+    "IdentityServer4": "1.0.0-beta5",
+    "IdentityServer4.AccessTokenValidation": "1.0.1-beta2"
   },
 
   "tools": {

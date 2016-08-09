@@ -14,10 +14,5 @@ namespace AngularBBS.Models
         public List<string> Labels { get; set; }
 
         public List<string> Assignees { get; set; }
-
-        // Todo: Test purpose only.
-        [Required]
-        public string Token { get; set; }
-
     }
 }

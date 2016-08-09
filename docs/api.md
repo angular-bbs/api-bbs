@@ -7,7 +7,13 @@
 1. Login link on the home page
 1. Click "Github" to be re-directed to Github login screen
 1. Authorize the app for scope of "public_repo"
- 
+
+### Local Account after github Authentication
+
+After first time login with github account, the MVC controller will ask the user to create a local account without password. 
+
+**Access token will be addded to user's claim after local account is created.** This way, the client does not have to request access token from github every time it needs to access github api.
+
 # Github API
 
 After authorized with github:
@@ -24,13 +30,11 @@ After authorized with github:
     ```
     {
         "title": "title text",
-        "body": "body text",
-        "token": "TOKEN"
+        "body": "body text",        
     }
     ```
     * title: issue title, required
-    * body: issue body
-    * token: valid access token, required. 
+    * body: issue body    
 
 # Github Secret
 

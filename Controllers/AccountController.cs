@@ -166,7 +166,6 @@ namespace AngularBBS.Controllers
             {
                 return RedirectToAction(nameof(Login));
             }
-
             // Sign in the user with this external login provider if the user already has a login.
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false);
             if (result.Succeeded)
@@ -208,9 +207,12 @@ namespace AngularBBS.Controllers
                     return View("ExternalLoginFailure");
                 }
                 var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+                
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
+                    var token = info.AuthenticationTokens.FirstOrDefault(a => a.Name == "access_token").Value;
+                    await _userManager.AddClaimAsync(user, new Claim("Token", token));
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
                     {
