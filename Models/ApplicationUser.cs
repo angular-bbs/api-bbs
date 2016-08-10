@@ -10,4 +10,6 @@ namespace AngularBBS.Models
     public class ApplicationUser : IdentityUser
     {
     }
+
+    
 }

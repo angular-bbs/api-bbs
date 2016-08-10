@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
@@ -55,7 +54,7 @@ namespace AngularBBS
                 UserInformationEndpoint = GithubConfig.UserInfoEndPoint,
                 ClaimsIssuer = GithubConfig.ClaimIssure,
                 SaveTokens = true,
-                Scope = {GithubConfig.Scope},
+                Scope = {"public_repo", "user:email"},
                 // Retrieving user information is unique to each provider.
                 Events = new OAuthEvents
                 {
@@ -99,8 +98,7 @@ namespace AngularBBS
             {
                 app.UseExceptionHandler("/Home/Error");
             }
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-
+          
             app.UseStaticFiles();
 
              app.UseIdentity();
@@ -160,7 +158,7 @@ namespace AngularBBS
             if (!string.IsNullOrEmpty(name))
             {
                 context.Identity.AddClaim(new Claim(
-                    "urn:github:name", name,
+                    GithubConfig.NameClaimType, name,
                     ClaimValueTypes.String, context.Options.ClaimsIssuer));
             }
 
@@ -168,7 +166,15 @@ namespace AngularBBS
             if (!string.IsNullOrEmpty(link))
             {
                 context.Identity.AddClaim(new Claim(
-                    "urn:github:url", link,
+                    GithubConfig.UrlClaimType, link,
+                    ClaimValueTypes.String, context.Options.ClaimsIssuer));
+            }
+
+            var email = user.Value<string>("email");
+            if (!string.IsNullOrEmpty(email))
+            {
+                context.Identity.AddClaim(new Claim(
+                    GithubConfig.EmailClaimType, email,
                     ClaimValueTypes.String, context.Options.ClaimsIssuer));
             }
         }

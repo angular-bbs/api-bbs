@@ -27,6 +27,7 @@ namespace AngularBBS.Services
 
         public static string ClientId { get; set; }
         public static string Secret { get; set; }
+        
 
         public const string BaseAddress = "https://github.com";
         public const string BaseApiAddress = "https://api.github.com";
@@ -34,9 +35,11 @@ namespace AngularBBS.Services
         public const string TokenEndpoint = BaseAddress + "/login/oauth/access_token";
         public const string UserInfoEndPoint = BaseApiAddress + "/user";
         public const string ClaimIssure = "OAuth2-GithubConfig";
-        public const string Scope = "public_repo";
+        public const string TokenClaimType = "access_token";
+        public const string EmailClaimType = "urn:github:email";
+        public const string UrlClaimType = "urn:github:url";
+        public const string NameClaimType = "urn:github:name";
 
-    };
-
+    }
     }
 

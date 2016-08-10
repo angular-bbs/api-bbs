@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using AngularBBS.Models;
 using AngularBBS.Models.AccountViewModels;
 using AngularBBS.Services;
+using Microsoft.AspNetCore.Mvc.Formatters;
 
 namespace AngularBBS.Controllers
 {
@@ -166,10 +167,22 @@ namespace AngularBBS.Controllers
             {
                 return RedirectToAction(nameof(Login));
             }
+            var token = info.AuthenticationTokens.FirstOrDefault(a => a.Name == GithubConfig.TokenClaimType).Value;
+            // var email = info.Principal.Claims.FirstOrDefault(c => c.Type == GithubConfig.EmailClaimType)?.Value;
+
             // Sign in the user with this external login provider if the user already has a login.
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false);
             if (result.Succeeded)
             {
+                var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+                var claims = await _userManager.GetClaimsAsync(user);
+                var oldClaims = claims.Where(c => c.Type == GithubConfig.TokenClaimType);
+                foreach (var oldClaim in oldClaims)
+                {
+                    await _userManager.RemoveClaimAsync(user, oldClaim);
+                }
+                await _userManager.AddClaimAsync(user, new Claim(GithubConfig.TokenClaimType, token));
+                await _signInManager.RefreshSignInAsync(user);
                 _logger.LogInformation(5, "User logged in with {Name} provider.", info.LoginProvider);
                 return RedirectToLocal(returnUrl);
             }
@@ -211,8 +224,8 @@ namespace AngularBBS.Controllers
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
-                    var token = info.AuthenticationTokens.FirstOrDefault(a => a.Name == "access_token").Value;
-                    await _userManager.AddClaimAsync(user, new Claim("Token", token));
+                    var token = info.AuthenticationTokens.FirstOrDefault(a => a.Name == GithubConfig.TokenClaimType).Value;
+                    await _userManager.AddClaimAsync(user, new Claim(GithubConfig.TokenClaimType, token));
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
                     {

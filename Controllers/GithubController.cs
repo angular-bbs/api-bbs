@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -35,7 +36,8 @@ namespace AngularBBS.Controllers
         public string GetToken()
         {
             //Todo: Remove this api on production.
-            return _accessToken;
+            var token = User.Claims.FirstOrDefault(c => c.Type == "access_token")?.Value;
+            return token;
         }
 
         [Route("issues")]
